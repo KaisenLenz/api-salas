@@ -11,6 +11,7 @@ app.use(bodyParser.json());
 app.get('/',(req,res)=>{
     console.log('[TEST]!');
     res.send('Hello from Homepage');
+    console.log("Hello Worlds");
     
 });
 
