@@ -6,6 +6,7 @@ const db = require("../config/connectionpg");
 const PS = require("pg-promise").PreparedStatement;
 
 /*GET*/
+//Tener todos los usuarios 
 app.get("/", (req, res, next) => {
   db.any("SELECT * FROM usuario")
     .then((tipo_usuarios) => {
@@ -22,5 +23,11 @@ app.get("/", (req, res, next) => {
       });
     });
 });
+
+
+/*Eliminar Usuarios */
+
+
+/*Modificar */
 
 module.exports = app;

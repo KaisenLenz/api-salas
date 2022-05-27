@@ -7,7 +7,7 @@ require("dotenv").config();
 //Inicializar variables
 const app = express();
 
-const PORT = 5000;
+const PORT = 3000;
 
 const pool = require("./config/connectionpg");
 
@@ -18,12 +18,16 @@ app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
 //Importar rutas
-const usuarios = require("./routes/getTablas");
+const usuarios = require("./routes/usuarios");
 
+
+const imagen = require("./routes/instalaciones");
 
 //Rutas
 app.use("/usuarios", usuarios);
 
+
+app.use("/imagen", imagen);
 
 app.get('/',(req,res)=>{
     console.log('[TEST]!');
