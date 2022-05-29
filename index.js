@@ -21,13 +21,13 @@ app.use(express.json());
 const usuarios = require("./routes/usuarios");
 
 
-const imagen = require("./routes/instalaciones");
+const instalacion = require("./routes/instalaciones");
 
 //Rutas
 app.use("/usuarios", usuarios);
 
 
-app.use("/imagen", imagen);
+app.use("/instalacion", instalacion);
 
 app.get('/',(req,res)=>{
     console.log('[TEST]!');

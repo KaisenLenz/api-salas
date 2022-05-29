@@ -2,6 +2,10 @@ const aws = require("aws-sdk")
 const multer =require("multer")
 const multerS3 = require("multer-s3")
 const express = require("express");
+
+const db = require("../config/connectionpg");
+const PS = require("pg-promise").PreparedStatement;
+
 const app = express();
 
 const bucketName = process.env.AWS_BUCKET_NAME;
@@ -74,5 +78,51 @@ app.delete('/delete/:filename', async (req,res)=>{
 
     res.send("Se Elimino Exitosamente");
 })
+
+/*Obtener todas las instalaciones */
+app.get('/getInstalacion', async (req,res)=>{
+  
+  db.any("SELECT * FROM instalacion")
+  .then((instalaciones) => {
+    res.status(200).json({
+      ok: true,
+      instalaciones: instalaciones,
+    });
+  })
+  .catch((err) => {
+    return res.status(500).json({
+      ok: false,
+      mensaje: "Error agregando",
+      errors: err,
+    });
+  });  
+})
+
+/*Obtener todas las instalaciones por nivel */
+app.get('/getInstalacion', async (req,res)=>{
+    const piso = req.query.piso
+    db.any("SELECT * FROM instalacion WHERE piso = "+piso)
+    .then((instalaciones) => {
+      res.status(200).json({
+        ok: true,
+        instalaciones: instalaciones,
+      });
+    })
+    .catch((err) => {
+      return res.status(500).json({
+        ok: false,
+        mensaje: "Error agregando",
+        errors: err,
+      });
+    });  
+})
+
+/*Obtener todas las instalaciones por nombre */
+
+/*Insertar instalaciones*/
+
+/*Modificar Instalaciones */
+
+/*Eliminar Instalaciones */
 
 module.exports = app;
