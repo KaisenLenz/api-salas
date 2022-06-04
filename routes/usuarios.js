@@ -1,7 +1,7 @@
 const express = require("express");
 
 const app = express();
-
+app.use(express.json());
 const db = require("../config/connectionpg");
 const PS = require("pg-promise").PreparedStatement;
 
@@ -26,7 +26,40 @@ app.get("/", (req, res, next) => {
 
 
 
+/*Login de Usuarios*/
+//select exists (select * from usuario where correo = 'test@gmail.com' and password = 'test123')
+app.post("/login", (req, res, next) => {
+  const body = req.body;
+  //const correo = req.query.correo;
+  //const password = req.query.password;
+  const correo = body.correo;
+  const password = body.password;
+  
+  
+  db.any(`Select * from usuario where correo = '${correo}' and password = '${password}'`)
+    .then((tipo_usuarios) => {
 
+      if(tipo_usuarios == ''){
+        res.status(500).json({
+          ok: false,
+          mensaje: 'Correo o Contraseña Incorrecta',
+        });
+      }else{
+        res.status(200).json({
+          ok: true,
+          usuarios: tipo_usuarios,
+        });
+      }
+    })
+    .catch((err) => {
+      return res.status(500).json({
+        ok: false,
+        mensaje: "Error agregando",
+        errors: err,
+      });
+    });
+    
+});
 
 /*Eliminar Usuarios */
 

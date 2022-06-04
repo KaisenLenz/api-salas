@@ -46,11 +46,6 @@ const upload=multer({
        cb(undefined,true) //pass 'flase' if u want to reject upload
     }})
     
-    
-
-
-
-
 
 app.post('/upload', upload.single("image"), async (req, res) => {
     try {
@@ -80,9 +75,12 @@ app.delete('/delete/:filename', async (req,res)=>{
 })
 
 /*Obtener todas las instalaciones */
+//http://18.231.149.121:3000/instalacion/getInstalacion
 app.get('/getInstalacion', async (req,res)=>{
   
-  db.any("SELECT * FROM instalacion")
+  db.any(`SELECT instalacion.id_instalacion,instalacion.nombre,tipoinstalacion.nombre as tipoinstalacion,sector.acronimo as sector,campus.acronimo as campus, instalacion.descripcion, instalacion.piso,instalacion.latitud,instalacion.longitud,instalacion.foto,instalacion.id_usuario_creador,instalacion.fecha_creacion
+          FROM instalacion, sector, campus, tipoinstalacion
+          WHERE sector.id_campus = campus.id_campus AND instalacion.id_sector = sector.id_sector AND instalacion.id_tipo = tipoinstalacion.id_tipo;`)
   .then((instalaciones) => {
     res.status(200).json({
       ok: true,
@@ -99,7 +97,8 @@ app.get('/getInstalacion', async (req,res)=>{
 })
 
 /*Obtener todas las instalaciones por nivel */
-app.get('/getInstalacion', async (req,res)=>{
+//http://18.231.149.121:3000/instalacion/getPiso?piso=2
+app.get('/getPiso', async (req,res)=>{
     const piso = req.query.piso
     db.any("SELECT * FROM instalacion WHERE piso = "+piso)
     .then((instalaciones) => {
