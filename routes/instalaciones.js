@@ -58,27 +58,29 @@ app.post('/upload', upload.single("image"), async (req, res) => {
     
 })
 
+/*
 app.get('/get/:filename', async (req,res)=>{
     const filename = req.params.filename
     console.log("Entra");
     let x = await s3.getObject({Bucket:bucketName,Key:filename}).promise();
 
     res.send(x.Body);
-})
+})*/
 
+/*
 app.delete('/delete/:filename', async (req,res)=>{
     const filename = req.params.filename
     console.log("Entra");
     await s3.deleteObject({Bucket:bucketName,Key:filename}).promise();
 
     res.send("Se Elimino Exitosamente");
-})
+})*/
 
 /*Obtener todas las instalaciones */
-//http://18.231.149.121:3000/instalacion/getInstalacion
-app.get('/getInstalacion', async (req,res)=>{
+//http://18.231.149.121:3000/instalacion
+app.get('/', async (req,res)=>{
   
-  db.any(`SELECT instalacion.id_instalacion,instalacion.nombre,tipoinstalacion.nombre as tipoinstalacion,sector.acronimo as sector,campus.acronimo as campus, instalacion.descripcion, instalacion.piso,instalacion.latitud,instalacion.longitud,instalacion.foto,instalacion.id_usuario_creador,instalacion.fecha_creacion
+  db.any(`SELECT instalacion.id_instalacion,instalacion.nombre,tipoinstalacion.nombre as tipoinstalacion,sector.nombre as sector,campus.nombre as campus, instalacion.descripcion, instalacion.piso,instalacion.latitud,instalacion.longitud,instalacion.foto,instalacion.id_usuario_creador,instalacion.fecha_creacion
           FROM instalacion, sector, campus, tipoinstalacion
           WHERE sector.id_campus = campus.id_campus AND instalacion.id_sector = sector.id_sector AND instalacion.id_tipo = tipoinstalacion.id_tipo;`)
   .then((instalaciones) => {
@@ -100,7 +102,9 @@ app.get('/getInstalacion', async (req,res)=>{
 //http://18.231.149.121:3000/instalacion/getPiso?piso=2
 app.get('/getPiso', async (req,res)=>{
     const piso = req.query.piso
-    db.any("SELECT * FROM instalacion WHERE piso = "+piso)
+    db.any(`SELECT instalacion.id_instalacion,instalacion.nombre,tipoinstalacion.nombre as tipoinstalacion,sector.nombre as sector,campus.nombre as campus, instalacion.descripcion, instalacion.piso,instalacion.latitud,instalacion.longitud,instalacion.foto
+            FROM instalacion, sector, campus, tipoinstalacion
+            WHERE sector.id_campus = campus.id_campus AND instalacion.id_sector = sector.id_sector AND instalacion.id_tipo = tipoinstalacion.id_tipo AND instalacion.piso = $1 ;`,piso)
     .then((instalaciones) => {
       res.status(200).json({
         ok: true,
@@ -118,10 +122,96 @@ app.get('/getPiso', async (req,res)=>{
 
 /*Obtener todas las instalaciones por nombre */
 
-/*Insertar instalaciones*/
 
+
+/*Insertar instalaciones*/
+//http://18.231.149.121:3000/instalacion/insert
+app.post('/insert',  upload.single("image"), async (req,res)=>{
+  const body = req.body;
+  const nombre = body.nombre;
+  const id_sector = body.id_sector;
+  const id_tipo = body.id_tipo;
+  const descripcion = body.descripcion;
+  const piso = body.piso;
+  const latitud = body.latitud;
+  const longitud = body.longitud;
+  const foto = req.file.location;
+  const id_usuario = body.id_usuario;
+  const agregaInstalacion = new PS({
+    name: "agregarInstalacion",
+    text: "INSERT INTO instalacion (nombre,id_sector,id_tipo,descripcion,piso,latitud,longitud,foto,id_usuario_creador) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING id_instalacion;",
+    values: [nombre, id_sector, id_tipo, descripcion, piso, latitud, longitud, foto, id_usuario],
+  });
+  
+  try {
+    db.one(agregaInstalacion)
+    .then((instalaciones) => {
+      res.status(200).json({
+        ok: true,
+        mensaje: "Se agregado Exitosamente en el id "+instalaciones.id_instalacion
+      });
+    })
+    .catch((err) => {
+      return res.status(500).json({
+        ok: false,
+        mensaje: "Error agregando",
+        errors: err,
+      });
+    });  
+  } catch(error){ 
+    res.status(400).send({error:error.message})
+  }
+
+})
 /*Modificar Instalaciones */
+app.put("/update", (req, res, next) => {
+  const body = req.body;
+  const actualizacionInstalacion = new PS({
+    name: "actualizacionInstalacion",
+    text: "UPDATE instalacion SET nombre = $1,id_sector=$2, id_tipo=$3, descripcion=$4,piso=$5, latitud=$6, longitud =$7 WHERE id_instalacion = $8",
+    values: [body.nombre, body.id_sector, body.id_tipo, body.descripcion, body.piso, body.latitud, body.longitud, body.id],
+  });
+  db.any(actualizacionInstalacion)
+    .then(() => {
+      res.status(200).json({
+        ok: true,
+      });
+    })
+    .catch((err) => {
+      return res.status(500).json({
+        ok: false,
+        mensaje: "Error Actualizando",
+        errors: err,
+      });
+    });
+});
+
+
 
 /*Eliminar Instalaciones */
+
+//http://18.231.149.121:3000/instalacion/delete
+app.delete('/delete', async (req,res)=>{
+  const id = req.query.id
+  db.one("DELETE FROM instalacion WHERE id_instalacion = $1 RETURNING foto", id)
+  .then((instalacion) => {
+    const foto = instalacion.foto;
+    const imagen = foto.split('/');
+    const filename = imagen[3]
+    console.log(filename);
+    s3.deleteObject({Bucket:bucketName,Key:filename}).promise();
+    res.status(200).json({
+      ok: true,
+      mensaje: "Se ha borrado exitosamente "+instalacion.foto,
+    });
+  })
+  .catch((err) => {
+    return res.status(500).json({
+      ok: false,
+      mensaje: "Error agregando",
+      errors: err,
+    });
+  });  
+})
 
 module.exports = app;

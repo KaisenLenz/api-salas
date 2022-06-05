@@ -5,6 +5,12 @@ app.use(express.json());
 const db = require("../config/connectionpg");
 const PS = require("pg-promise").PreparedStatement;
 
+//const bodyParser = require("body-parser");
+
+
+// parse application/x-www-form-urlencoded
+//app.use(express.urlencoded({ extended: false }));
+//app.use(express.json());
 /*GET*/
 //Tener todos los usuarios 
 app.get("/", (req, res, next) => {
