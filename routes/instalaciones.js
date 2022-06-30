@@ -35,7 +35,7 @@ const upload=multer({
           },
  }),
     limits:{
-       fileSize: 1000000 // Maximum 1 MB
+       fileSize: 3000000 // Maximum 1 MB
     },
     fileFilter(req,file,cb){
       //filter out the file that we doesn't want to upload   
@@ -120,9 +120,50 @@ app.get('/getPiso', async (req,res)=>{
     });  
 })
 
+/*Obtener instalaciones por id */
+//http://18.231.149.121:3000/instalacion/getId?id=2
+app.get('/getId', async (req,res)=>{
+  const id = req.query.id
+  db.any(`SELECT instalacion.id_instalacion,instalacion.nombre,tipoinstalacion.nombre as tipoinstalacion,sector.nombre as sector,campus.nombre as campus, instalacion.descripcion, instalacion.piso,instalacion.latitud,instalacion.longitud,instalacion.foto
+          FROM instalacion, sector, campus, tipoinstalacion
+          WHERE sector.id_campus = campus.id_campus AND instalacion.id_sector = sector.id_sector AND instalacion.id_tipo = tipoinstalacion.id_tipo AND instalacion.id_instalacion = $1 ;`,id)
+  .then((instalaciones) => {
+    res.status(200).json({
+      ok: true,
+      instalaciones: instalaciones,
+    });
+  })
+  .catch((err) => {
+    return res.status(500).json({
+      ok: false,
+      mensaje: "Error 172: Error en la Consulta",
+      errors: err,
+    });
+  });  
+})
+
 /*Obtener todas las instalaciones por nombre */
+app.get('/filtro', async (req,res)=>{
+  const query = req.query;
+  const nombre = query.nombre;
+  const id_sector = query.id_sector;
+  const id_tipo = query.id_tipo;
+  console.log(query);
 
-
+  if(nombre != undefined){
+    res.status(200).json({
+      ok: true,
+      mensaje: "Se Filtro " + nombre
+    });
+  }
+  else{
+    res.status(200).json({
+      ok: true,
+      mensaje: "Error no ha ingresado los parametros de la consulta"
+    });
+  }
+ 
+})
 
 /*Insertar instalaciones*/
 //http://18.231.149.121:3000/instalacion/insert
@@ -164,6 +205,7 @@ app.post('/insert',  upload.single("image"), async (req,res)=>{
 
 })
 /*Modificar Instalaciones */
+//http://18.231.149.121:3000/instalacion/update
 app.put("/update", (req, res, next) => {
   const body = req.body;
   const actualizacionInstalacion = new PS({
@@ -187,9 +229,9 @@ app.put("/update", (req, res, next) => {
 });
 
 
-
 /*Eliminar Instalaciones */
 
+/*Cambiar Query por Body y dejarlo el link solo como / */
 //http://18.231.149.121:3000/instalacion/delete
 app.delete('/delete', async (req,res)=>{
   const id = req.query.id
@@ -213,5 +255,49 @@ app.delete('/delete', async (req,res)=>{
     });
   });  
 })
+
+/*Obtener Todos los Tipos de Salas */
+//http://18.231.149.121:3000/instalacion/getTipo
+app.get('/getTipo', async (req,res)=>{
+  
+  db.any(`SELECT * FROM tipoinstalacion;`)
+  .then((instalaciones) => {
+    res.status(200).json({
+      ok: true,
+      instalaciones: instalaciones,
+    });
+  })
+  .catch((err) => {
+    return res.status(500).json({
+      ok: false,
+      mensaje: "Error agregando",
+      errors: err,
+    });
+  });  
+})
+
+//http://18.231.149.121:3000/instalacion/getSectores?id=2
+app.get('/getSectores', async (req,res)=>{
+  const id = req.query.id
+  db.any(`SELECT s.id_sector, ca.nombre as nombre_campus, s.nombre as nombre_sector, s.acronimo
+          FROM sector as s
+          INNER JOIN campus as ca ON s.id_campus = ca.id_campus 
+          WHERE ca.id_campus = $1;`, id)
+  .then((instalaciones) => {
+    res.status(200).json({
+      ok: true,
+      instalaciones: instalaciones,
+    });
+  })
+  .catch((err) => {
+    return res.status(500).json({
+      ok: false,
+      mensaje: "Error agregando",
+      errors: err,
+    });
+  });  
+})
+
+
 
 module.exports = app;

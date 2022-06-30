@@ -8,9 +8,7 @@ const PS = require("pg-promise").PreparedStatement;
 //const bodyParser = require("body-parser");
 
 
-// parse application/x-www-form-urlencoded
-//app.use(express.urlencoded({ extended: false }));
-//app.use(express.json());
+
 /*GET*/
 //Tener todos los usuarios 
 app.get("/", (req, res, next) => {
@@ -30,14 +28,10 @@ app.get("/", (req, res, next) => {
     });
 });
 
-
-
 /*Login de Usuarios*/
 //select exists (select * from usuario where correo = 'test@gmail.com' and password = 'test123')
 app.post("/login", (req, res, next) => {
   const body = req.body;
-  //const correo = req.query.correo;
-  //const password = req.query.password;
   const correo = body.correo;
   const password = body.password;
   
@@ -65,6 +59,31 @@ app.post("/login", (req, res, next) => {
       });
     });
     
+});
+
+/*Agregar Usuarios */
+app.post("/", (req, res, next) => {
+  const body = req.body;
+  const agregarUsuarios = new PS({
+    name: "agregarInstalacion",
+    text: "insert into usuario (nombre,apellido,correo,password,admin) values($1,$2,$3,$4,$5)RETURNING id_usuario;",
+    values: [body.nombre, body.apellido, body.correo, body.password, body.admin],
+  });
+
+  db.one(agregarUsuarios)
+  .then((usuarios) => {
+    res.status(200).json({
+      ok: true,
+      mensaje: "Se agregado Exitosamente en el id "+usuarios.id_usuario
+    });
+  })
+  .catch((err) => {
+    return res.status(500).json({
+      ok: false,
+      mensaje: "Error agregando",
+      errors: err,
+    });
+  }); 
 });
 
 /*Eliminar Usuarios */
