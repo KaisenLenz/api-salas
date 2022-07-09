@@ -146,7 +146,7 @@ app.get('/getId', async (req,res)=>{
 app.get('/filtro', async (req,res)=>{
   const query = req.query;
   const nombre = query.nombre;
-  const id_sector = query.id_sector;
+  const id_campus = query.id_campus;
   const id_tipo = query.id_tipo;
   console.log(query);
 
@@ -234,7 +234,7 @@ app.put("/update", (req, res, next) => {
 /*Cambiar Query por Body y dejarlo el link solo como / */
 //http://18.231.149.121:3000/instalacion/delete
 app.delete('/delete', async (req,res)=>{
-  const id = req.query.id
+  const id = req.body.id
   db.one("DELETE FROM instalacion WHERE id_instalacion = $1 RETURNING foto", id)
   .then((instalacion) => {
     const foto = instalacion.foto;
@@ -276,6 +276,7 @@ app.get('/getTipo', async (req,res)=>{
   });  
 })
 
+/*Obtener Todos los Sectores perteneciente al id de Campus */
 //http://18.231.149.121:3000/instalacion/getSectores?id=2
 app.get('/getSectores', async (req,res)=>{
   const id = req.query.id

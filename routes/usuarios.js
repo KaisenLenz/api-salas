@@ -10,6 +10,7 @@ const PS = require("pg-promise").PreparedStatement;
 
 
 /*GET*/
+//http://18.231.149.121:3000/usuarios/
 //Tener todos los usuarios 
 app.get("/", (req, res, next) => {
   db.any("SELECT * FROM usuario")
@@ -29,7 +30,8 @@ app.get("/", (req, res, next) => {
 });
 
 /*Login de Usuarios*/
-//select exists (select * from usuario where correo = 'test@gmail.com' and password = 'test123')
+//http://18.231.149.121:3000/login/
+
 app.post("/login", (req, res, next) => {
   const body = req.body;
   const correo = body.correo;
@@ -62,6 +64,8 @@ app.post("/login", (req, res, next) => {
 });
 
 /*Agregar Usuarios */
+//Metodo POST
+//http://18.231.149.121:3000/usuarios/
 app.post("/", (req, res, next) => {
   const body = req.body;
   const agregarUsuarios = new PS({
@@ -87,8 +91,50 @@ app.post("/", (req, res, next) => {
 });
 
 /*Eliminar Usuarios */
+//Metodo Delete
+//http://18.231.149.121:3000/usuarios/
+app.delete('/', async (req,res)=>{
+  const id = req.body.id
+  db.one("DELETE FROM usuario WHERE id_usuario = $1 RETURNING id_usuario", id)
+  .then((instalacion) => {
+    res.status(200).json({
+      ok: true,
+      mensaje: "Se ha borrado exitosamente "+instalacion.id_usuario,
+    });
+  })
+  .catch((err) => {
+    return res.status(500).json({
+      ok: false,
+      mensaje: "Error agregando",
+      errors: err,
+    });
+  });  
+})
 
 
 /*Modificar */
+//Metodo PUT
+//http://18.231.149.121:3000/usuarios/
+app.put("/", (req, res, next) => {
+  const body = req.body;
+  const actualizacionUsuario = new PS({
+    name: "actualizacionUsuario",
+    text: "UPDATE usuario SET nombre = $1,apellido=$2, correo=$3, password=$4,admin=$5 WHERE id_usuario = $6",
+    values: [body.nombre, body.apellido, body.correo, body.password, body.admin, body.id],
+  });
+  db.any(actualizacionUsuario)
+    .then(() => {
+      res.status(200).json({
+        ok: true,
+      });
+    })
+    .catch((err) => {
+      return res.status(500).json({
+        ok: false,
+        mensaje: "Error Actualizando",
+        errors: err,
+      });
+    });
+});
 
 module.exports = app;
